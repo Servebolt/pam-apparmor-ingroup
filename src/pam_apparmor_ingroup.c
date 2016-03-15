@@ -22,7 +22,6 @@ struct options_t {
 	int debug;
 	int silent;
 	char *ingroup;
-	char *hat;
 };
 typedef struct options_t options_t;
 
@@ -35,8 +34,6 @@ parse_option (const pam_handle_t *pamh, const char *argv, options_t *options)
 		options->debug = 1;
 	else if (strncasecmp (argv, "ingroup=", 8) == 0)
 		options->ingroup = strdup (&argv[8]);
-	else if (strncasecmp (argv, "hat=", 4) == 0)
-		options->hat = strdup (&argv[4]);
 	else
 		pam_syslog (pamh, LOG_ERR, "Unknown option: `%s'", argv);
 }
@@ -53,9 +50,6 @@ get_options (const pam_handle_t *pamh, options_t *options,
 	if (options->ingroup == NULL)
 		options->ingroup = "confined";
 
-	if (options->hat == NULL)
-		options->hat = "confined";
-
 	return 0;
 }
 
@@ -64,11 +58,10 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 {
 	options_t options;
 	const char *user = NULL;
-	const char *hat = "unconfined";
+	const char *subprofile = "confined"; // default to confined
+	const char *unconfined = "unconfined";
 	char *con, *new_con;
-	int pam_retval = PAM_SUCCESS;
-	int retval;
-	int aa_avail = 1;
+	int retval, pam_retval = PAM_SUCCESS, aa_avail = 1;
 
 	get_options(pamh, &options, argc, argv);
 	if (flags & PAM_SILENT)
@@ -89,15 +82,20 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 		aa_avail = 0;
 	}
 
+	if ( strncmp(con, "unconfined", 10) == 0 ) {
+		pam_syslog(pamh, LOG_ERR, "Process is not running under an apparmor profile.\n");
+		aa_avail = 0;
+	}
+
 	if ( pam_modutil_user_in_group_nam_nam(pamh, user, options.ingroup) == 0 ) {
 		/* dont break everything if the user isnt confined anyway */
 		if ( aa_avail == 0 )
 			return PAM_SUCCESS;
-		pam_syslog(pamh, LOG_DEBUG, "Not in confinement group, using \"%s\"\n", hat);
+		subprofile = unconfined;
+		pam_syslog(pamh, LOG_DEBUG, "Not in confinement group\n");
 	}
 	else {
-		hat = options.hat;
-		pam_syslog(pamh, LOG_DEBUG, "User is confined, using \"%s\"\n", hat);
+		pam_syslog(pamh, LOG_DEBUG, "User wants to be confined\n");
 	}
 
 	if ( aa_avail == 0 ) {
@@ -105,13 +103,13 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 		return PAM_SESSION_ERR;
 	}
 
-	new_con = malloc(strlen(con) + strlen(hat) + 3); // // + 0 Byte
+	new_con = malloc(strlen(con) + strlen(subprofile) + 3); // // + 0 Byte
 	if ( !new_con ) {
 		pam_syslog(pamh, LOG_ERR, "failed to allocate memory\n");
 		return PAM_SYSTEM_ERR;
 	}
 
-	if ( 0 > sprintf(new_con, "%s//%s", con, hat) ) {
+	if ( 0 > sprintf(new_con, "%s//%s", con, subprofile) ) {
 		pam_syslog(pamh, LOG_ERR, "failed to construct full profile name\n");
 		pam_retval = PAM_SESSION_ERR;
 		goto out;
