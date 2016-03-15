@@ -78,12 +78,12 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 		return PAM_USER_UNKNOWN;
 
 	if ( aa_getcon(&con, NULL) == -1 ) {
-		pam_syslog(pamh, LOG_ERR, "Failed to query apparmor confinement. Please check if \"/proc/*/attr/current\" is read and writeable.\n");
+		pam_syslog(pamh, LOG_ERR, "failed to query apparmor confinement. Please check if \"/proc/*/attr/current\" is read and writeable.\n");
 		aa_avail = 0;
 	}
 
 	if ( strncmp(con, "unconfined", 10) == 0 ) {
-		pam_syslog(pamh, LOG_ERR, "Process is not running under an apparmor profile.\n");
+		pam_syslog(pamh, LOG_ERR, "process is not running under an apparmor profile.\n");
 		aa_avail = 0;
 	}
 
@@ -92,14 +92,14 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 		if ( aa_avail == 0 )
 			return PAM_SUCCESS;
 		subprofile = unconfined;
-		pam_syslog(pamh, LOG_DEBUG, "Not in confinement group\n");
+		pam_syslog(pamh, LOG_DEBUG, "not in confinement group\n");
 	}
 	else {
-		pam_syslog(pamh, LOG_DEBUG, "User wants to be confined\n");
+		pam_syslog(pamh, LOG_DEBUG, "user wants to be confined\n");
 	}
 
 	if ( aa_avail == 0 ) {
-		pam_syslog(pamh, LOG_ERR, "Apparmor is not available\n");
+		pam_syslog(pamh, LOG_ERR, "AppArmor is not available\n");
 		return PAM_SESSION_ERR;
 	}
 
@@ -114,6 +114,8 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 		pam_retval = PAM_SESSION_ERR;
 		goto out;
 	}
+
+	pam_syslog(pamh, LOG_DEBUG, "transitioning to profile name \"%s\"\n", new_con);
 
 	if ( 0 > aa_change_profile(new_con) ) {
 		pam_syslog(pamh, LOG_ERR, "failed to change to new confinement \"%s\". Check that \"change_profile -> %s//*\" is allowed.\n", new_con, con);
