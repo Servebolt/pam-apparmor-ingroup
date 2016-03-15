@@ -19,10 +19,10 @@
 #include <security/_pam_macros.h>
 
 struct options_t {
-  int debug;
-  int silent;
-  char *ingroup;
-  char *hat;
+	int debug;
+	int silent;
+	char *ingroup;
+	char *hat;
 };
 typedef struct options_t options_t;
 
@@ -65,10 +65,10 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 	options_t options;
 	const char *user = NULL;
 	const char *hat = "unconfined";
-    char *con, *new_con;
+	char *con, *new_con;
 	int pam_retval = PAM_SUCCESS;
 	int retval;
-    int aa_avail = 1;
+	int aa_avail = 1;
 
 	get_options(pamh, &options, argc, argv);
 	if (flags & PAM_SILENT)
@@ -84,49 +84,49 @@ int pam_sm_open_session(pam_handle_t *pamh,int flags,int argc, const char **argv
 	if (user == NULL || *user == '\0')
 		return PAM_USER_UNKNOWN;
 
-    if ( aa_getcon(&con, NULL) == -1 ) {
-        pam_syslog(pamh, LOG_ERR, "Failed to query apparmor confinement. Please check if \"/proc/*/attr/current\" is read and writeable.\n");
-        aa_avail = 0;
-    }
+	if ( aa_getcon(&con, NULL) == -1 ) {
+		pam_syslog(pamh, LOG_ERR, "Failed to query apparmor confinement. Please check if \"/proc/*/attr/current\" is read and writeable.\n");
+		aa_avail = 0;
+	}
 
-    if ( pam_modutil_user_in_group_nam_nam(pamh, user, options.ingroup) == 0 ) {
-        /* dont break everything if the user isnt confined anyway */
-        if ( aa_avail == 0 )
-            return PAM_SUCCESS;
-        pam_syslog(pamh, LOG_DEBUG, "Not in confinement group, using \"%s\"\n", hat);
-    }
-    else {
-        hat = options.hat;
-        pam_syslog(pamh, LOG_DEBUG, "User is confined, using \"%s\"\n", hat);
-    }
+	if ( pam_modutil_user_in_group_nam_nam(pamh, user, options.ingroup) == 0 ) {
+		/* dont break everything if the user isnt confined anyway */
+		if ( aa_avail == 0 )
+			return PAM_SUCCESS;
+		pam_syslog(pamh, LOG_DEBUG, "Not in confinement group, using \"%s\"\n", hat);
+	}
+	else {
+		hat = options.hat;
+		pam_syslog(pamh, LOG_DEBUG, "User is confined, using \"%s\"\n", hat);
+	}
 
-    if ( aa_avail == 0 ) {
-        pam_syslog(pamh, LOG_ERR, "Apparmor is not available\n");
-        return PAM_SESSION_ERR;
-    }
+	if ( aa_avail == 0 ) {
+		pam_syslog(pamh, LOG_ERR, "Apparmor is not available\n");
+		return PAM_SESSION_ERR;
+	}
 
-    new_con = malloc(strlen(con) + strlen(hat) + 3); // // + 0 Byte
-    if ( !new_con ) {
-        pam_syslog(pamh, LOG_ERR, "failed to allocate memory\n");
-        return PAM_SYSTEM_ERR;
-    }
+	new_con = malloc(strlen(con) + strlen(hat) + 3); // // + 0 Byte
+	if ( !new_con ) {
+		pam_syslog(pamh, LOG_ERR, "failed to allocate memory\n");
+		return PAM_SYSTEM_ERR;
+	}
 
-    if ( 0 > sprintf(new_con, "%s//%s", con, hat) ) {
-        pam_syslog(pamh, LOG_ERR, "failed to construct full profile name\n");
-        pam_retval = PAM_SESSION_ERR;
-        goto out;
-    }
+	if ( 0 > sprintf(new_con, "%s//%s", con, hat) ) {
+		pam_syslog(pamh, LOG_ERR, "failed to construct full profile name\n");
+		pam_retval = PAM_SESSION_ERR;
+		goto out;
+	}
 
-    if ( 0 > aa_change_profile(new_con) ) {
-        pam_syslog(pamh, LOG_ERR, "failed to change to new confinement \"%s\". Check that \"change_profile -> %s//*\" is allowed.\n", new_con, con);
-        pam_retval = PAM_SESSION_ERR;
-        goto out;
-    }
+	if ( 0 > aa_change_profile(new_con) ) {
+		pam_syslog(pamh, LOG_ERR, "failed to change to new confinement \"%s\". Check that \"change_profile -> %s//*\" is allowed.\n", new_con, con);
+		pam_retval = PAM_SESSION_ERR;
+		goto out;
+	}
 
 	out:
-        free(con);
-        free(new_con);
-        return pam_retval;
+	free(con);
+	free(new_con);
+	return pam_retval;
 }
 
 PAM_EXTERN
