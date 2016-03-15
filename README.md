@@ -1,6 +1,8 @@
 # AppArmor PAM module
 
-This is an alternative to the PAM module AppArmor ships, and is loosely based on it. The main differences are that we only use two hats, the DEFAULT and the confined, and select which one to use based on supplementary groups rather than user name or primary group.
+This is an alternative to the PAM module AppArmor ships, and is loosely based on it. The main differences are that we only use two sub profiles, `unconfined` and `confined`, and select which one to use based on supplementary groups rather than user name or primary group.
+
+This makes it easier to set up confinement of a group of users without having to define hats for every user or using primary groups which are incompatible with usergroups and the like.
 
 ### Installation from source
 
@@ -16,10 +18,7 @@ On Ubuntu, Debian and their derivatives that would be the packages build-essenti
 
     ingroup=
 
-Group to check for. Default is `confined`
+What group to check for. If found we apply the confined profile.
 
-    hat=
-
-What hat to change to if the group is found. Default is `confined`. If the ingroup group is not found the DEFAULT hat is applied. In most cases DEFAULT would set the users shell to escape any confinement.
-
-### Setup
+### Missing
+Example profiles and PAM configuration
