@@ -46,11 +46,6 @@ AX_LDFLAGS_OPTION([-Wl,-z,now],[MORE_LDFLAGS])
 
 AC_CACHE_SAVE
 
-AX_CFLAGS_GCC_OPTION([-std=gnu11], [MORE_CFLAGS],, [
-    AC_MSG_FAILURE([GNU C11 not supported by compiler.],[1])
-])
-
-
 AC_CHECK_HEADERS([security/pam_appl.h], [],
   [AC_MSG_ERROR([[PAM header files not found, install libpam-dev.]])])
 AC_CHECK_HEADERS([security/pam_modules.h security/_pam_macros.h security/pam_modutil.h], [], [],
