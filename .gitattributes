@@ -1,2 +1,3 @@
 autogen.sh linguist-vendored
 get-version linguist-vendored
+m4/* linguist-vendored
