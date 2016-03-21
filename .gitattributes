@@ -1,3 +1,17 @@
 autogen.sh linguist-vendored
 get-version linguist-vendored
 m4/* linguist-vendored
+Makefile.in linguest-vendored
+src/Makefile.in linguest-vendored
+aclocal.m4 linguest-vendored
+ar-lib linguest-vendored
+compile linguest-vendored
+config.guess linguest-vendored
+config.h.in linguest-vendored
+config.sub linguest-vendored
+configure linguest-vendored
+depcomp linguest-vendored
+install-sh linguest-vendored
+ltmain.sh linguest-vendored
+missing linguest-vendored
+
